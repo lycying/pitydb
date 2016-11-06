@@ -1,6 +1,6 @@
+[submodule "vendor/github.com/robertkrimen/otto"]
+	path = vendor/github.com/robertkrimen/otto
+	url = https://github.com/robertkrimen/otto.git
 [submodule "vendor/github.com/google/btree"]
 	path = vendor/github.com/google/btree
 	url = https://github.com/google/btree.git
-[submodule "vendor/github.com/google/uuid"]
-	path = vendor/github.com/google/uuid
-	url = https://github.com/google/uuid.git
