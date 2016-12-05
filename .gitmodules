@@ -4,3 +4,6 @@
 [submodule "vendor/github.com/google/btree"]
 	path = vendor/github.com/google/btree
 	url = https://github.com/google/btree.git
+[submodule "vendor/github.com/chzyer/readline"]
+	path = vendor/github.com/chzyer/readline
+	url = https://github.com/chzyer/readline.git
