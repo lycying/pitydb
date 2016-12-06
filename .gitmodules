@@ -7,3 +7,6 @@
 [submodule "vendor/github.com/chzyer/readline"]
 	path = vendor/github.com/chzyer/readline
 	url = https://github.com/chzyer/readline.git
+[submodule "vendor/github.com/BurntSushi/toml"]
+	path = vendor/github.com/BurntSushi/toml
+	url = https://github.com/BurntSushi/toml.git
