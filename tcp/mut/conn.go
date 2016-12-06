@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"github.com/lycying/pitydb/dt"
 	"io"
 	"net"
+	"sync/atomic"
 	"time"
 )
 
@@ -14,8 +14,8 @@ type Conn struct {
 	writeChan  chan []byte
 	connID     uint64 //set via connection mgr
 	closed     bool
-	writeBytes *dt.UInt64
-	readBytes  *dt.UInt64
+	writeBytes uint64
+	readBytes  uint64
 	socket     *net.TCPConn
 	br         *bufio.Reader
 	bw         *bufio.Writer
@@ -35,8 +35,8 @@ func NewConnection(socket *net.TCPConn, cfg *Config) *Conn {
 		client: nil,
 		server: nil,
 
-		readBytes:  dt.ValidNewUInt64(0),
-		writeBytes: dt.ValidNewUInt64(0),
+		readBytes:  0,
+		writeBytes: 0,
 	}
 
 	c.resetState()
@@ -63,8 +63,8 @@ func (c *Conn) resetState() {
 // after reconnect .
 // And it should be the Client side
 func (c *Conn) ResetCount() {
-	c.writeBytes.GetAndSet(0)
-	c.readBytes.GetAndSet(0)
+	atomic.StoreUint64(&c.writeBytes, 0)
+	atomic.StoreUint64(&c.readBytes, 0)
 }
 
 // WriteASync write the Packet async
@@ -99,7 +99,7 @@ func (c *Conn) WriteSync(p Packet) error {
 func (c *Conn) ReadRaw(buf []byte) (int, error) {
 	n, err := io.ReadFull(c.br, buf)
 	if n > 0 {
-		c.readBytes.AddAndGet(uint64(n))
+		c.incReadBytes(uint64(n))
 	}
 	return n, err
 }
@@ -108,12 +108,31 @@ func (c *Conn) ReadBytes(delim byte) (line []byte, err error) {
 	return c.br.ReadBytes(delim)
 }
 
+func (c *Conn) incReadBytes(delta uint64) uint64 {
+	for {
+		current := c.readBytes
+		next := current + delta
+		if atomic.CompareAndSwapUint64(&c.readBytes, current, next) {
+			return current
+		}
+	}
+}
+func (c *Conn) incWriteBytes(delta uint64) uint64 {
+	for {
+		current := c.writeBytes
+		next := current + delta
+		if atomic.CompareAndSwapUint64(&c.writeBytes, current, next) {
+			return current
+		}
+	}
+}
+
 // WriteRaw write bytes to the socket
 // And it remember the number of the bytes
 func (c *Conn) WriteRaw(buf []byte) {
 	n := uint64(len(buf))
 	if n > 0 {
-		c.writeBytes.AddAndGet(n)
+		c.incWriteBytes(n)
 		c.bw.Write(buf)
 	}
 }
@@ -220,13 +239,13 @@ func (c *Conn) Close() error {
 // GetWriteBytes return the number of the read bytes
 // The number keep growing even if the connection has reconnect
 func (c *Conn) GetReadBytes() uint64 {
-	return c.readBytes.GetValue().(uint64)
+	return atomic.LoadUint64(&c.readBytes)
 }
 
 // GetWriteBytes return the number of the written bytes
 // The number keep growing even if the connection has reconnect
 func (c *Conn) GetWriteBytes() uint64 {
-	return c.writeBytes.GetValue().(uint64)
+	return atomic.LoadUint64(&c.writeBytes)
 }
 
 // Server return the server if have

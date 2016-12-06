@@ -1,26 +1,32 @@
 package mut
 
 import (
-	"github.com/lycying/pitydb/dt"
 	"sync"
+	"sync/atomic"
 )
 
 type ConnMgr struct {
 	connections map[uint64]*Conn
 	lock        *sync.RWMutex
-	nextID      *dt.UInt64
+	nextID      uint64
 }
 
 func newConnectionMgr() *ConnMgr {
 	mgr := new(ConnMgr)
 	mgr.connections = make(map[uint64]*Conn)
 	mgr.lock = new(sync.RWMutex)
-	mgr.nextID = dt.ValidNewUInt64(0)
+	mgr.nextID = 0
 	return mgr
 }
 
 func (mgr *ConnMgr) getNextId() uint64 {
-	return mgr.nextID.IncrementAndGet()
+	for {
+		current := mgr.nextID
+		next := current + 1
+		if atomic.CompareAndSwapUint64(&mgr.nextID, current, next) {
+			return next
+		}
+	}
 }
 
 func (mgr *ConnMgr) add(conn *Conn) {
