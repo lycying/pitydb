@@ -24,7 +24,7 @@ func newRetry() *retry {
 	return newValidRetry(defaultMaxRetryTime)
 }
 
-func (r *retry) retryAfter() {
+func (r *retry) retryAfter(info interface{}) {
 	if r.tempDelay == 0 {
 		r.tempDelay = 60 * time.Millisecond
 	} else {
@@ -34,7 +34,7 @@ func (r *retry) retryAfter() {
 		r.tempDelay = max
 	}
 
-	logger.Warn("retry after %v ,has retried %d times", r.tempDelay, r.retryTime)
+	logger.Warn("%v retry after %+v ,has retried %d times", info, r.tempDelay, r.retryTime)
 
 	time.Sleep(r.tempDelay)
 	r.retryTime++

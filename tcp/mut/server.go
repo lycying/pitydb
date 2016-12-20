@@ -59,7 +59,7 @@ func (srv *Server) listenLoop() {
 		//retry if err occur
 		if err != nil {
 			if ne, ok := err.(net.Error); ok && ne.Temporary() {
-				retry.retryAfter()
+				retry.retryAfter(srv)
 				continue
 			}
 		}

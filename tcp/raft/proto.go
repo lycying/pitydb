@@ -7,12 +7,12 @@ import (
 
 // AppendEntriesReq Invoked by leader to replicate log entries (§5.3); also used as heartbeat (§5.2).
 type AppendEntriesReq struct {
-	Term         uint64      //leader’s term
-	LeaderId     string      //so follower can redirect clients
-	PrevLogIndex uint64      //index of log entry immediately preceding new ones
-	PrevLogTerm  uint64      //term of prevLogIndex entry
-	Entries      []*LogEntry //log entries to store (empty for heartbeat; may send more than one for efficiency)
-	LeaderCommit uint64      //leader’s commitIndex
+	Term         uint64 //leader’s term
+	LeaderId     string //so follower can redirect clients
+	PrevLogIndex uint64 //index of log entry immediately preceding new ones
+	PrevLogTerm  uint64 //term of prevLogIndex entry
+	Entries      []*Log //log entries to store (empty for heartbeat; may send more than one for efficiency)
+	LeaderCommit uint64 //leader’s commitIndex
 }
 
 type AppendEntriesResp struct {

@@ -36,7 +36,7 @@ func (client *Client) DialAsync() error {
 		}
 
 		if err != nil {
-			retry.retryAfter()
+			retry.retryAfter(client)
 			continue
 		}
 
