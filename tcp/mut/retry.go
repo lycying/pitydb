@@ -34,7 +34,7 @@ func (r *retry) retryAfter(info interface{}) {
 		r.tempDelay = max
 	}
 
-	logger.Warn("%v retry after %+v ,has retried %d times", info, r.tempDelay, r.retryTime)
+	logger.Warn("mut# %v retry after %+v ,has retried %d times", info, r.tempDelay, r.retryTime)
 
 	time.Sleep(r.tempDelay)
 	r.retryTime++
