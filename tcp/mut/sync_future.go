@@ -6,7 +6,8 @@ import (
 )
 
 type SyncFuture struct {
-	ch chan interface{}
+	ch        chan interface{}
+	timerChan <-chan time.Time
 }
 
 func NewSyncFuture() *SyncFuture {
@@ -16,15 +17,20 @@ func NewSyncFuture() *SyncFuture {
 }
 
 func (f *SyncFuture) WaitFor(timeout time.Duration) (interface{}, error) {
-	timeoutCh := time.After(timeout)
+	f.timerChan = time.After(timeout)
 	select {
 	case obj := <-f.ch:
 		return obj, nil
-	case <-timeoutCh:
+	case b := <-f.timerChan:
+		logger.Debug("%+v", b)
 		return nil, errors.New("timeout")
 	}
 }
 
 func (f *SyncFuture) SetValue(obj interface{}) {
 	f.ch <- obj
+}
+
+func (f *SyncFuture) Cancel() {
+	f.ch <- nil
 }
