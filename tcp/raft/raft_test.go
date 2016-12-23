@@ -6,11 +6,30 @@ import (
 )
 
 func TestRaft(t *testing.T) {
-	raftCfg1 := &RaftConfig{}
-	raftCfg1.Srv = ":14001"
-	raftCfg1.Peers = []string{"localhost:14001", "localhost:14002"}
-	raft1 := NewRaft(raftCfg1)
-	println(raft1)
+	go func() {
+		raftCfg := &RaftConfig{}
+		raftCfg.Srv = ":14001"
+		raftCfg.Peers = []string{"localhost:14001", "localhost:14002", "localhost:14003"}
+		raft := NewRaft(raftCfg)
+		raft.Startup()
+		println(raft)
+	}()
+	go func() {
+		raftCfg := &RaftConfig{}
+		raftCfg.Srv = ":14002"
+		raftCfg.Peers = []string{"localhost:14001", "localhost:14002", "localhost:14003"}
+		raft := NewRaft(raftCfg)
+		raft.Startup()
+		println(raft)
+	}()
+	go func() {
+		raftCfg := &RaftConfig{}
+		raftCfg.Srv = ":14003"
+		raftCfg.Peers = []string{"localhost:14001", "localhost:14002", "localhost:14003"}
+		raft := NewRaft(raftCfg)
+		raft.Startup()
+		println(raft)
+	}()
 
 	time.Sleep(time.Hour)
 }

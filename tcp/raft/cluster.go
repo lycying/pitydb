@@ -11,6 +11,7 @@ type Cluster struct {
 	cfg            *mut.Config
 	endPoints      map[string]*mut.Client
 	srv            *mut.Server
+	clusterSize    uint32
 }
 
 func NewCluster(cfg *mut.Config) *Cluster {
@@ -44,6 +45,7 @@ func (cluster *Cluster) JoinCluster(peer string) {
 	}
 	client := mut.NewClient(peer, cluster.cfg)
 	cluster.endPoints[peer] = client
+
 	go client.DialAsync()
 	logger.Info("raft# cluster join %v , welcome", peer)
 }
@@ -61,7 +63,14 @@ func (cluster *Cluster) LeaveCluster(peer string) {
 	}
 }
 
-func (cluster *Cluster) Broadcast(packet *mut.Packet) {
+func (cluster *Cluster) Size() int {
+	cluster.collectionLock.RLock()
+	defer cluster.collectionLock.RUnlock()
+
+	return len(cluster.endPoints)
+}
+
+func (cluster *Cluster) Broadcast(packet mut.Packet) {
 	for _, value := range cluster.endPoints {
 		if value.IsConnected() {
 			value.Conn().WriteAsync(packet)
