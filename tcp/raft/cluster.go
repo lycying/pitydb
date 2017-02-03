@@ -1,7 +1,7 @@
 package raft
 
 import (
-	"github.com/lycying/pitydb/tcp/mut"
+	"github.com/lycying/mut"
 	"strings"
 	"sync"
 )

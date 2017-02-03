@@ -2,7 +2,7 @@ package raft
 
 import (
 	"encoding/json"
-	"github.com/lycying/pitydb/tcp/mut/codec/typelen"
+	"github.com/lycying/mut/codec/typelen"
 )
 
 // AppendEntriesReq Invoked by leader to replicate log entries (§5.3); also used as heartbeat (§5.2).

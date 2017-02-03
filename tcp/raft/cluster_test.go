@@ -1,8 +1,8 @@
 package raft
 
 import (
-	"github.com/lycying/pitydb/tcp/mut"
-	"github.com/lycying/pitydb/tcp/mut/codec/typelen"
+	"github.com/lycying/mut"
+	"github.com/lycying/mut/codec/typelen"
 	"testing"
 	"time"
 )

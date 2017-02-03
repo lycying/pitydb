@@ -2,8 +2,9 @@ package raft
 
 import (
 	"encoding/json"
-	"github.com/lycying/pitydb/tcp/mut"
-	"github.com/lycying/pitydb/tcp/mut/codec/typelen"
+	"github.com/lycying/mut"
+	"github.com/lycying/mut/codec/typelen"
+	"github.com/lycying/pitydb/dt"
 	"math/rand"
 	"time"
 )
@@ -21,7 +22,6 @@ type Raft struct {
 	cluster        *Cluster
 	logStore       LogStore
 	state          RaftState
-	myLeader       string
 	cfg            *RaftConfig
 	heartBeatTimer *time.Timer
 
@@ -33,6 +33,9 @@ type Raft struct {
 
 	// Last applied log to the FSM
 	lastApplied uint64
+
+	myLeader    string
+	voteCounter *dt.UInt32
 }
 
 type RaftConfig struct {
@@ -59,6 +62,9 @@ func NewRaft(raftCfg *RaftConfig) *Raft {
 	rf.lastApplied = 1
 	rf.commitIndex = 1
 	rf.currentTerm = 1
+
+	rf.myLeader = ""
+	rf.voteCounter = dt.NewUInt32()
 
 	rf.cluster = NewCluster(cfg)
 	rf.cluster.InitCluster(raftCfg.Srv, raftCfg.Peers)
@@ -94,14 +100,23 @@ func (r *Raft) WaitForHeartBeat() {
 			p, _ := Marshal(req)
 
 			r.cluster.Broadcast(p)
+
+			r.myLeader = r.cfg.Srv
+			r.voteCounter.SetValue(uint32(1))
 		})
 	} else {
 		r.heartBeatTimer.Reset(heartBeatSpec())
 	}
 }
 
-func (r *Raft) EventVoteReq(req *VoteReq) {
+func (r *Raft) processVoteReq(c *mut.Conn, req *VoteReq) {
 	logger.Debug("%+v", req)
+	resp := &VoteResp{}
+	p, _ := Marshal(resp)
+	c.WriteAsync(p)
+}
+func (r *Raft) processVoteResp(c *mut.Conn, resp *VoteResp) {
+	logger.Debug("%+v", resp)
 }
 
 func (r *Raft) OnConnect(c *mut.Conn) {
@@ -116,6 +131,11 @@ func (r *Raft) OnMessage(c *mut.Conn, p mut.Packet) {
 	case TypeVoteReq:
 		req := &VoteReq{}
 		json.Unmarshal(packet.Data, req)
-		r.EventVoteReq(req)
+		r.processVoteReq(c, req)
+	case TypeVoteResp:
+		resp := &VoteResp{}
+		json.Unmarshal(packet.Data, resp)
+		r.processVoteResp(c, resp)
 	}
+
 }
